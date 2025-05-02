@@ -1,0 +1,319 @@
+/**index.wxss**/
+.container {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */ /* Remove align-items as page-content handles centering */
+  padding: 0;
+  box-sizing: border-box;
+  height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 新增：页面主内容区，使用 Flex 布局 */
+.page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* 占据 container 的所有空间 */
+  width: 100%;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+.map-component {
+  width: 100%;
+  /* height: 450rpx; */ /* 移除固定高度 */
+  flex: 1; /* 让地图占据所有可用垂直空间 */
+}
+
+/* 新增：底部控件容器 */
+.bottom-controls {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0; /* 防止被压缩 */
+    width: 100%;
+    /* 可以添加背景色或阴影 */
+    /* background-color: #fff; */
+    /* box-shadow: 0 -1px 3px rgba(0,0,0,0.05); */
+}
+
+/* --- 恢复：滚动历史标尺容器样式 --- */
+.history-ruler-container {
+  width: 100%;
+  height: 100rpx; /* 恢复高度 */
+  background-color: #f0f0f0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden; 
+  position: relative;
+}
+
+.history-ruler-scroll {
+  width: 100%;
+  height: 100%;
+  white-space: nowrap; 
+}
+
+.ruler-content {
+  position: relative; 
+  display: inline-block; 
+  height: 100%;
+  /* !! 更新宽度以匹配新的 maxRulerPercent !! */
+  width: 200%; /* Changed from 330% */
+  padding: 0 30rpx; 
+}
+
+.ruler-line {
+  position: absolute;
+  left: 0; /* 线条应该撑满 .ruler-content */
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4rpx;
+  background-color: #b0a08e;
+}
+
+.ruler-marker-item {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+}
+
+.ruler-tick {
+  width: 2rpx;
+  height: 20rpx;
+  background-color: #b0a08e;
+}
+
+.ruler-label {
+  position: absolute;
+  bottom: 5rpx;
+  font-size: 18rpx; 
+  color: #888;
+  white-space: nowrap;
+}
+
+.ruler-event-label {
+  position: absolute;
+  top: 5rpx;
+  font-size: 18rpx; 
+  color: #666;
+  white-space: nowrap;
+}
+
+/* --- 指示器样式 (可能需要微调) --- */
+.ruler-indicator {
+  position: absolute;
+  top: 50%; 
+  transform: translate(-50%, -50%);
+  width: 16rpx;
+  height: 50rpx; /* 保持高度 */
+  background-color: #e64340;
+  border-radius: 2rpx;
+  z-index: 10; 
+  transition: left 0.3s ease;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+/* --- 恢复：静态历史标尺容器样式 --- */
+.static-history-ruler-container {
+  position: relative; /* 需要相对定位作为标签绝对定位的基准 */
+  width: 100%;
+  height: 60rpx; /* 调整高度以容纳标签 */
+  background-color: #f9f9f9;
+  margin-bottom: 10rpx;
+  display: flex;
+  align-items: center; /* 垂直居中基准线 */
+}
+
+.static-ruler-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%; /* 定位在容器垂直中间 */
+  transform: translateY(-50%);
+  height: 4rpx;
+  background-color: #e0e0e0;
+}
+
+/* 修改：标签容器也需要相对定位 */
+.static-ruler-labels {
+  position: relative; /* 确保标签相对于容器定位 */
+  width: 100%;
+  height: 100%; /* 占满父容器高度 */
+  /* 移除 flex 布局，因为标签使用绝对定位 */
+}
+
+/* 修改：标签项使用绝对定位 */
+.static-ruler-label-item {
+  position: absolute;
+  bottom: 5rpx; /* 定位在基准线下方一点 */
+  transform: translateX(-50%); /* 水平居中标签文本 */
+  font-size: 20rpx; /* 调小字号以容纳更多标签 */
+  color: #888;
+  white-space: nowrap; /* 防止标签换行 */
+  text-align: center;
+}
+
+.ruler-indicator {
+  position: absolute;
+  bottom: 50%; /* 指示器底部对齐基准线中点 */
+  transform: translateX(-50%) translateY(50%); /* 水平居中并调整垂直位置 */
+  width: 12rpx; /* 指示器宽度 */
+  height: 30rpx; /* 指示器高度 */
+  background-color: #e54d42; /* 指示器颜色 */
+  border-radius: 2rpx;
+  z-index: 1; /* 确保在标签上方 */
+}
+
+/* --- 移除滚动时间轴相关样式 --- */
+/* 
+.history-ruler-container { ... } 
+.history-ruler-scroll { ... }
+.ruler-content { ... }
+.ruler-line { ... }
+.ruler-marker-item { ... }
+.ruler-tick { ... }
+.ruler-label { ... }
+.ruler-event-label { ... }
+*/
+
+/* 时期选择器 (下方按钮) */
+.timeline-container {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 15rpx 0;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.period-buttons-scroll {
+  width: 100%;
+  height: 90rpx; /* 保持高度 */
+}
+
+.period-buttons-content {
+  display: flex; /* 保持 Flex 布局 */
+  flex-direction: row; /* 保持横向排列 */
+  white-space: nowrap; /* 保持不换行 */
+  align-items: center; /* 保持垂直居中 */
+  padding: 0 10rpx; /* 保持左右边距 */
+  box-sizing: border-box;
+}
+
+/* --- 恢复之前的按钮样式 --- */
+.period-button {
+  display: inline-flex; /* 改为 inline-flex */
+  align-items: center; /* 新增：垂直居中 Flex item (文本) */
+  justify-content: center; /* 新增：水平居中 Flex item (文本) */
+  padding: 15rpx 30rpx; 
+  margin: 0 10rpx; 
+  border-radius: 25rpx; 
+  background-color: #f7f7f7; 
+  color: #333; 
+  font-size: 28rpx; 
+  border: 1px solid #eee;
+  transition: all 0.3s ease;
+  line-height: normal; 
+  /* text-align: center; */ /* Flex 布局下不再需要 */
+  /* vertical-align: middle; */ /* Flex 布局下不再需要 */
+}
+
+/* 恢复之前的激活样式 */
+.period-button.active {
+  background-color: #448aff; /* 恢复之前的蓝色 */
+  color: #fff;
+  border-color: #448aff;
+  font-weight: bold; /* 恢复之前的粗体 */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* 恢复之前的阴影 */
+}
+
+/* --- 确保 .timeline-item 样式仍然被移除 --- */
+/*
+.timeline-item { ... }
+.timeline-item:first-child { ... }
+.timeline-item:last-child { ... }
+.timeline-item.active { ... }
+*/
+
+/* --- 新增：自定义信息浮窗样式 --- */
+.custom-callout {
+  position: absolute;
+  top: 20rpx; /* 初始定位：距离地图顶部20rpx */
+  left: 50%; /* 水平居中 */
+  transform: translateX(-50%); /* 精确水平居中 */
+  width: 80%; /* 限制宽度为屏幕的80% */
+  max-width: 600rpx; /* 最大宽度限制 */
+  background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+  border-radius: 10rpx;
+  padding: 20rpx;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100; /* 确保在标记点之上 */
+  /* overflow: hidden; */ /* 如果内容可能溢出，考虑添加 */
+}
+
+.callout-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+  word-wrap: break-word; /* 标题换行 */
+}
+
+.callout-details {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.5;
+  word-wrap: break-word;
+  max-height: 250rpx;
+  overflow-y: auto;
+}
+/* --- 样式结束 --- */
+
+/* ==================== 子时间轴样式 (压缩垂直空间) ==================== */
+.sub-timeline-container {
+  width: 90%; 
+  margin: 5px auto 8px; /* 减小上下边距 */
+  padding: 2px 0; /* 减小垂直内边距 */
+  position: relative; 
+  box-sizing: border-box;
+}
+
+.sub-timeline-labels {
+  display: flex;
+  justify-content: space-between; 
+  font-size: 10px; 
+  color: #666;
+  margin-bottom: 1px; /* 极小的标签与条间距 */
+  padding: 0 5px; 
+}
+
+.sub-timeline-label-start,
+.sub-timeline-label-end {
+  white-space: nowrap; 
+}
+
+.sub-timeline-bar {
+  width: 100%;
+  height: 5px; /* 减小时间轴条高度 */
+  background-color: #e0e0e0; 
+  border-radius: 3px; /* 相应减小圆角 */
+  position: relative; 
+}
+
+.sub-timeline-indicator {
+  position: absolute;
+  top: -1.5px; /* 调整垂直偏移以适应新高度 */
+  width: 8px; /* 减小指示器宽度 */
+  height: 8px; /* 减小指示器高度 */
+  background-color: #1AAD19; 
+  border: 1px solid #f0f0f0; 
+  box-sizing: border-box;
+  border-radius: 2px; 
+  transform: translateX(-50%); 
+  transition: left 0.3s ease; 
+  z-index: 1; 
+}
+/* ==================== 结束修改 ==================== */

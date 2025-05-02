@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Data Management
+
+Historical data points (locations, details, years) for different periods are organized into separate JavaScript files within the `[data/](mdc:data)` directory.
+
+- **Structure**: Each file (e.g., `[data/period_ancient.js](mdc:data/period_ancient.js)`, `[data/period_xia_shang_zhou.js](mdc:data/period_xia_shang_zhou.js)`) exports an array of objects representing historical sites/events. Early periods ("远古时期", "史前时代", "中华文明起源") are conceptually grouped under the "早期文明与起源" period key in the main logic, though data files remain separate.
+- **Loading**: The main page logic in `[pages/index/index.js](mdc:pages/index/index.js)` imports these data arrays.
+- **Consolidation**: The `loadAllData` function in `[pages/index/index.js](mdc:pages/index/index.js)` concatenates the data from all relevant period files into a single `allHistoricalData` array for filtering and processing.
+- **Period & Dynasty Definitions**:
+    - `comprehensiveTimePeriods` array in `[pages/index/index.js](mdc:pages/index/index.js)` defines the detailed historical periods/dynasties used for timeline labels and data filtering (e.g., "早期", "夏", "商", "周", "春秋", "战国", "秦", "汉", "三国", "晋", "南北朝", "隋", "唐", "五代", "宋", "元", "明", "清", "现代"). It includes internal keys, display names, and start/end years.
+    - `dynastyStartYearsMap` object in `[pages/index/index.js](mdc:pages/index/index.js)` stores the standard start years for major dynasties (starting from Xia), used for precise timeline indicator calculations.
+    - `buttonLabelMap` object in `[pages/index/index.js](mdc:pages/index/index.js)` maps the internal period keys from `comprehensiveTimePeriods` to the labels displayed on the period selection buttons at the bottom.
+    - `dataPeriodMap` object in `[pages/index/index.js](mdc:pages/index/index.js)` maps the internal period keys to the corresponding data arrays imported from the `/data` directory.
+
+
+

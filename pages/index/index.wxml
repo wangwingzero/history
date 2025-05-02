@@ -1,0 +1,83 @@
+<!--index.wxml-->
+<view class="container">
+  <!-- 新增主内容容器 -->
+  <view class="page-content">
+    <!-- 地图区域 -->
+    <map
+      id="map"
+      class="map-component"
+      longitude="{{longitude}}"
+      latitude="{{latitude}}"
+      scale="5"
+      show-location
+      bindmarkertap="onMarkerTap"
+      style="width: 100%;"
+      catchtap="onMapTap"
+    >
+      <!-- 修改：使用 view 代替 cover-view -->
+      <view class="custom-callout" wx:if="{{selectedMarkerInfo}}">
+          <view class="callout-title">{{selectedMarkerInfo.title}}</view>
+          <view class="callout-details">{{selectedMarkerInfo.details}}</view>
+      </view>
+    </map>
+
+    <!-- 底部控件容器 -->
+    <view class="bottom-controls">
+
+      <!-- ==================== 调整后：子时间轴 (第一位) ==================== -->
+      <view class="sub-timeline-container" wx:if="{{showSubTimeline}}">
+        <view class="sub-timeline-labels">
+          <text class="sub-timeline-label-start">{{subTimelineStartLabel}}</text>
+          <text class="sub-timeline-label-end">{{subTimelineEndLabel}}</text>
+        </view>
+        <view class="sub-timeline-bar">
+          <view class="sub-timeline-indicator" 
+                wx:if="{{selectedEventYearPosition !== null}}" 
+                style="left: {{selectedEventYearPosition}}%;"></view>
+        </view>
+      </view>
+      <!-- ==================== 结束子时间轴 ==================== -->
+
+      <!-- 静态历史标尺区域 (主时间轴) (第二位) -->
+      <view class="static-history-ruler-container">
+        <view class="static-ruler-line"></view>
+        <!-- 修改：遍历 numericalLabels 并使用绝对定位 -->
+        <view class="static-ruler-labels">
+            <text 
+              wx:for="{{numericalLabels}}" 
+              wx:key="year" 
+              class="static-ruler-label-item" 
+              style="left: {{item.position}}%;"> 
+              {{item.label}}
+            </text>
+        </view>
+        <!-- 红色指示器 (保持不变) -->
+        <view 
+          wx:if="{{currentRulerPosition !== null}}"
+          class="ruler-indicator" 
+          style="left: {{currentRulerPosition}}%;"
+        ></view>
+      </view>
+      <!-- END: 静态历史标尺区域 -->
+
+      <!-- 时期选择器 (下方按钮) (第三位) -->
+      <view class="timeline-container"> 
+        <scroll-view class="period-buttons-scroll" scroll-x="true">
+          <view class="period-buttons-content">
+            <button
+              wx:for="{{timePeriods}}" 
+              wx:key="*this"
+              class="period-button {{item === selectedPeriod ? 'active' : ''}}"
+              bindtap="onPeriodTap"
+              data-period="{{item}}"> 
+              {{buttonLabelMap[item]}}
+            </button>
+          </view>
+        </scroll-view>
+      </view>
+      <!-- END: 时期选择器 -->
+
+    </view> <!-- End bottom-controls -->
+
+  </view>
+</view>

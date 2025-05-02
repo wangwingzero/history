@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Custom Map Callout Implementation
+
+Instead of using the built-in WeChat Mini Program map `callout` feature for displaying marker details (which caused styling and compatibility issues), this project uses a custom implementation.
+
+- **Component**: A `<view class="custom-callout">` element is defined in `[pages/index/index.wxml](mdc:pages/index/index.wxml)`.
+- **Control**: Its visibility is controlled by the `selectedMarkerInfo` state variable in `[pages/index/index.js](mdc:pages/index/index.js)`. This variable is populated when a map marker is tapped (`onMarkerTap`) and cleared when the map is tapped (`onMapTap`) or another marker is selected.
+- **Content**: The content of the callout (title, details) is dynamically bound from the `selectedMarkerInfo` object.
+- **Styling**: Styles for the custom callout (absolute positioning, background, padding, max-width, max-height, word wrapping, overflow scrolling) are defined in `[pages/index/index.wxss](mdc:pages/index/index.wxss)` under the `.custom-callout` selector and its children (`.callout-title`, `.callout-details`).
+- **Map Markers**: Note that map markers (`markers` array in `[pages/index/index.js](mdc:pages/index/index.js)`) still require `width` and `height` properties to avoid map errors, even when using the default map pin icon.
+
