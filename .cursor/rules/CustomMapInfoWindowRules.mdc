@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 自定义地图信息浮窗实现和逻辑
+globs: ["pages/index/index.wxml", "pages/index/index.wxss", "pages/index/index.js"]
+alwaysApply: true
+---
+
+# 自定义地图信息浮窗（Custom Map Callout）
+
+本项目未使用微信小程序 `map` 组件自带的 `callout`，而是采用自定义实现，以解决样式自定义和跨平台显示一致性的问题，并能更好地控制显示逻辑。
+
+## 组件结构
+
+- **中国历史事件的自定义浮窗** `<view class="custom-callout china-event-callout">` 定义在 ](mdc:pages/index/index.wxml) 的 `.popup-container` 内。
+- **世界历史事件的自定义浮窗** `<view class="custom-callout world-event-callout">` 同样定义在 `.popup-container` 内。
+- 两个浮窗的显示优先级和层叠关系通过 `chineseCalloutIsSecondary` 和 `worldPopupIsSecondary` 这两个 `data` 状态变量来控制。当一个浮窗显示时，另一个如果也需要显示，则会被设置为次要（通常表现为更低的 `z-index` 或半透明，具体样式由CSS控制）。
+
+## 显示控制
+
+- **中国历史事件**：
+  - 当点击地图上的中国历史事件标记（`marker`）时，`onMarkerTap` 函数被触发。
+  - `onMarkerTap` 会根据 `markerId`（小于200）从 `this.currentPeriodDisplayableEvents` (当前时期在地图上可显示的中国事件列表，已经过排序和坐标调整) 中找到对应的事件数据。
+  - 找到事件后，其信息（包括格式化后的年份 `startYearDisplay`, `endYearDisplay` 和地图标签序号 `mapLabel`）被存入 `selectedMarkerInfo`，从而触发中国事件浮窗的显示。
+  - 如果此时世界事件浮窗已显示，则 `worldPopupIsSecondary` 会被设为 `true`，中国事件浮窗优先显示。
+  
+- **世界历史事件**：
+  - 当点击底部世界历史事件面板中的条目时，`onWorldEventTap` 函数被触发。
+  - `onWorldEventTap` 会根据事件 `id` 从 `currentWorldHistoryEvents` 或 `allRealWorldHistoryData` 中找到对应的世界事件详情。
+  - 事件详情（包括格式化后的年份和 `mapLabel`）被存入 `selectedWorldEventDetail`，触发世界事件浮窗的显示。
+  - 如果此时中国事件浮窗已显示，则 `chineseCalloutIsSecondary` 会被设为 `true`，世界事件浮窗优先显示。
+  - 点击地图上的世界历史事件标记（`markerId >= 200`）时，也会间接触发 `onWorldEventTap` 逻辑，显示对应的世界事件浮窗。
+  
+- **关闭逻辑**：
+  - 点击地图空白处（`onMapTap`）会清空 `selectedMarkerInfo` 和 `selectedWorldEventDetail`，关闭所有浮窗。
+  - 每个浮窗内部通常会有一个关闭按钮，分别绑定 `onCloseChineseCallout` 和 `onCloseWorldEventDetailPopup`，点击后仅清空对应浮窗的状态。
+  - 切换历史时期（`onPeriodTap`）时，所有已打开的浮窗状态和面板都会被重置和关闭。
+
+## 样式和布局
+
+- 浮窗样式定义在 [pages/index/index.wxss](mdc:pages/index/index.wxss) 的 `.custom-callout` 类下。
+- 针对中国事件和世界事件的特定样式（如背景色、边框色）可以通过 `.china-event-callout` 和 `.world-event-callout` 进行区分。
+- 样式包括绝对定位、居中（或接近标记点的位置）、背景、圆角、阴影、最大宽度/高度限制、内容自动换行和内部滚动等。
+- `.popup-container` 作为容器，可能也定义了 `z-index` 等属性来管理浮窗的层级。

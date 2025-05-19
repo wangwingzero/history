@@ -1,11 +1,12 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/logs/logs"
+    "pages/logs/index",
+    "pages/tech_culture/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Weixin",
+    "navigationBarTitleText": "虎大王历史时空图",
     "navigationBarBackgroundColor": "#ffffff"
   },
   "style": "v2",

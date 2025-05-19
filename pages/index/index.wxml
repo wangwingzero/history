@@ -1,4 +1,42 @@
 <!--index.wxml-->
+<wxs module="formatter">
+  // 将文本中的高亮标记转换为可渲染的数组
+  function parseHighlightedText(text) {
+    if (!text) return [{ text: '', highlight: false }];
+    
+    var parts = text.split('{%%HIGHLIGHT%%}');
+    var result = [];
+    
+    for (var i = 0; i < parts.length; i++) {
+      if (i === 0) {
+        // 第一部分不是高亮的
+        if (parts[i]) {
+          result.push({ text: parts[i], highlight: false });
+        }
+      } else {
+        // 其他部分需要进一步分割，找到高亮文本的结束位置
+        var subParts = parts[i].split('{%%/HIGHLIGHT%%}');
+        if (subParts.length > 0) {
+          // 高亮部分
+          if (subParts[0]) {
+            result.push({ text: subParts[0], highlight: true });
+          }
+          // 非高亮部分
+          if (subParts.length > 1 && subParts[1]) {
+            result.push({ text: subParts[1], highlight: false });
+          }
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  module.exports = {
+    parseHighlightedText: parseHighlightedText
+  };
+</wxs>
+
 <view class="container">
   <!-- 新增主内容容器 -->
   <view class="page-content">
@@ -8,21 +46,120 @@
       class="map-component"
       longitude="{{longitude}}"
       latitude="{{latitude}}"
-      scale="5"
-      show-location
+      scale="{{scale}}"
+      min-scale="3"
+      max-scale="20"
+      markers="{{markers}}"
+      polygons="{{dynastyPolygons}}"
+      circles="{{circles}}"
       bindmarkertap="onMarkerTap"
+      bindlabeltap="onMarkerTap"
       style="width: 100%;"
       catchtap="onMapTap"
+      bindregionchange="onRegionChange"
+      enable-rotate
+      enable-overlooking
+      enable-traffic
+      enable-poi
+      enable-building
+      show-location="{{false}}"
     >
-      <!-- 修改：使用 view 代替 cover-view -->
-      <view class="custom-callout" wx:if="{{selectedMarkerInfo}}">
-          <view class="callout-title">{{selectedMarkerInfo.title}}</view>
-          <view class="callout-details">{{selectedMarkerInfo.details}}</view>
-      </view>
+      <!-- 新增：一键重置地图视角按钮 (指北针) -->
+      <!-- <view class="reset-map-button" bindtap="resetMapView">
+        <image class="reset-map-icon" src="/images/compass_icon.png" style="transform: rotate({{mapRotation}}deg);" />
+      </view> -->
+
+      <!-- 修改：将弹窗移入容器 -->
+      <!-- <view class="custom-callout {{chineseCalloutIsSecondary ? 'popup-secondary' : ''}}" wx:if="{{selectedMarkerInfo}}"> ... </view> -->
     </map>
+
+    <!-- 新增：弹窗容器 -->
+    <view class="popup-container">
+      <!-- 世界历史事件优先（当 domestic is secondary） -->
+      <view class="custom-callout" 
+            wx:if="{{selectedWorldEventDetail && chineseCalloutIsSecondary}}"
+            bindtap="onCalloutTap" data-type="world" data-lat="{{selectedWorldEventDetail.latitude}}" data-lng="{{selectedWorldEventDetail.longitude}}">
+         <view class="callout-close-btn" catchtap="onCloseWorldEventDetailPopup">关闭</view>
+         <view class="callout-title world-event-title-orange"><text wx:if="{{selectedWorldEventDetail.mapLabel}}" class="callout-marker-label world-event-marker-label">[{{selectedWorldEventDetail.mapLabel}}]</text> {{selectedWorldEventDetail.title}}</view>
+         <view class="callout-time">
+           {{selectedWorldEventDetail.startYearDisplay}}
+           <block wx:if="{{selectedWorldEventDetail.endYearDisplay && selectedWorldEventDetail.endYearDisplay !== selectedWorldEventDetail.startYearDisplay}}">
+             - {{selectedWorldEventDetail.endYearDisplay}}
+           </block>
+         </view>
+         <view class="callout-location" wx:if="{{selectedWorldEventDetail.locationName}}">
+           <text class="location-icon">📍</text> {{selectedWorldEventDetail.locationName}}
+         </view>
+         <view class="callout-details">{{selectedWorldEventDetail.description || selectedWorldEventDetail.details}}</view>
+      </view>
+      <!-- 国内事件优先（当 world is secondary or world not visible） -->
+      <view class="custom-callout" 
+            wx:if="{{selectedMarkerInfo && (!selectedWorldEventDetail || worldPopupIsSecondary)}}" 
+            bindtap="onCalloutTap" data-type="china" data-lat="{{selectedMarkerInfo.latitude}}" data-lng="{{selectedMarkerInfo.longitude}}">
+         <view class="callout-close-btn" catchtap="onCloseChineseCallout">关闭</view>
+         <view class="callout-title chinese-event-title-blue"><text wx:if="{{selectedMarkerInfo.mapLabel}}" class="callout-marker-label">[{{selectedMarkerInfo.mapLabel}}]</text> {{selectedMarkerInfo.title}}</view>
+         <view class="callout-time">
+           {{selectedMarkerInfo.startYearDisplay}}
+           <block wx:if="{{selectedMarkerInfo.endYearDisplay && selectedMarkerInfo.endYearDisplay !== selectedMarkerInfo.startYearDisplay}}">
+             - {{selectedMarkerInfo.endYearDisplay}}
+           </block>
+         </view>
+         <view class="callout-location" wx:if="{{selectedMarkerInfo.locationName}}">
+           <text class="location-icon">📍</text> {{selectedMarkerInfo.locationName}}
+         </view>
+         <view class="callout-details">{{selectedMarkerInfo.details}}</view>
+      </view>
+      <!-- 世界历史事件后渲染（当 domestic is primary and world is visible） -->
+      <view class="custom-callout" 
+            wx:if="{{selectedWorldEventDetail && !chineseCalloutIsSecondary}}"
+            bindtap="onCalloutTap" data-type="world" data-lat="{{selectedWorldEventDetail.latitude}}" data-lng="{{selectedWorldEventDetail.longitude}}">
+         <view class="callout-close-btn" catchtap="onCloseWorldEventDetailPopup">关闭</view>
+         <view class="callout-title world-event-title-orange"><text wx:if="{{selectedWorldEventDetail.mapLabel}}" class="callout-marker-label world-event-marker-label">[{{selectedWorldEventDetail.mapLabel}}]</text> {{selectedWorldEventDetail.title}}</view>
+         <view class="callout-time">
+           {{selectedWorldEventDetail.startYearDisplay}}
+           <block wx:if="{{selectedWorldEventDetail.endYearDisplay && selectedWorldEventDetail.endYearDisplay !== selectedWorldEventDetail.startYearDisplay}}">
+             - {{selectedWorldEventDetail.endYearDisplay}}
+           </block>
+         </view>
+         <view class="callout-location" wx:if="{{selectedWorldEventDetail.locationName}}">
+           <text class="location-icon">📍</text> {{selectedWorldEventDetail.locationName}}
+         </view>
+         <view class="callout-details">{{selectedWorldEventDetail.description || selectedWorldEventDetail.details}}</view>
+      </view>
+      <!-- 国内事件后渲染（当 world is primary and domestic is visible） -->
+      <view class="custom-callout" 
+            wx:if="{{selectedMarkerInfo && selectedWorldEventDetail && !worldPopupIsSecondary}}"
+            bindtap="onCalloutTap" data-type="china" data-lat="{{selectedMarkerInfo.latitude}}" data-lng="{{selectedMarkerInfo.longitude}}">
+         <view class="callout-close-btn" catchtap="onCloseChineseCallout">关闭</view>
+          <view class="callout-title chinese-event-title-blue"><text wx:if="{{selectedMarkerInfo.mapLabel}}" class="callout-marker-label">[{{selectedMarkerInfo.mapLabel}}]</text> {{selectedMarkerInfo.title}}</view>
+         <view class="callout-time">
+           {{selectedMarkerInfo.startYearDisplay}}
+           <block wx:if="{{selectedMarkerInfo.endYearDisplay && selectedMarkerInfo.endYearDisplay !== selectedMarkerInfo.startYearDisplay}}">
+             - {{selectedMarkerInfo.endYearDisplay}}
+           </block>
+         </view>
+         <view class="callout-location" wx:if="{{selectedMarkerInfo.locationName}}">
+           <text class="location-icon">📍</text> {{selectedMarkerInfo.locationName}}
+         </view>
+         <view class="callout-details">{{selectedMarkerInfo.details}}</view>
+      </view>
+    </view>
 
     <!-- 底部控件容器 -->
     <view class="bottom-controls">
+
+      <!-- 修改：将按钮改为三个按钮，并调整为"中国史 搜索 世界史"的排列 -->
+      <view class="world-history-trigger-container">
+        <button class="history-button chinese-history-button" bindtap="onToggleChineseHistoryPanel">
+          点击➡️中国史📖 
+        </button>
+        <button class="history-button search-button" bindtap="onToggleSearchPanel">
+          点击➡️搜索🔍
+        </button>
+        <button class="history-button world-history-button" bindtap="onToggleWorldHistoryPanel">
+          点击➡️世界史📖
+        </button>
+      </view>
 
       <!-- ==================== 调整后：子时间轴 (第一位) ==================== -->
       <view class="sub-timeline-container" wx:if="{{showSubTimeline}}">
@@ -32,8 +169,12 @@
         </view>
         <view class="sub-timeline-bar">
           <view class="sub-timeline-indicator" 
-                wx:if="{{selectedEventYearPosition !== null}}" 
-                style="left: {{selectedEventYearPosition}}%;"></view>
+                wx:if="{{selectedEventStartYearPosition !== null && selectedEventDurationWidth !== null}}" 
+                style="left: {{selectedEventStartYearPosition}}%; width: {{selectedEventDurationWidth}}%;"></view>
+          <!-- 修改：世界事件指示器绑定 left 和 width，并添加动态重叠类 -->
+          <view class="sub-timeline-indicator world-event-indicator {{subTimelineWorldEventIsOverlap ? 'sub-indicator-overlap' : ''}}"
+                wx:if="{{worldEventOnSubTimelinePosition !== null}}" 
+                style="left: {{worldEventOnSubTimelinePosition}}%; width: {{worldEventOnSubTimelineDurationWidth}}%; background-color: #FF8C00;"> </view>
         </view>
       </view>
       <!-- ==================== 结束子时间轴 ==================== -->
@@ -51,12 +192,16 @@
               {{item.label}}
             </text>
         </view>
-        <!-- 红色指示器 (保持不变) -->
+        <!-- 红色指示器 (时期) -->
         <view 
           wx:if="{{currentRulerPosition !== null}}"
           class="ruler-indicator" 
           style="left: {{currentRulerPosition}}%;"
         ></view>
+        <!-- 修改：移除 world-event-indicator-main 类，直接使用 ruler-indicator 类和 style -->
+        <view class="ruler-indicator" 
+              wx:if="{{worldEventOnMainTimelinePosition !== null}}"
+              style="left: {{worldEventOnMainTimelinePosition}}%; background-color: #FF8C00; z-index: 2;"> </view>
       </view>
       <!-- END: 静态历史标尺区域 -->
 
@@ -79,5 +224,188 @@
 
     </view> <!-- End bottom-controls -->
 
+    <!-- 移除独立的世界历史事件详情浮层 -->
+    <!-- <view class="world-event-detail-popup {{worldPopupIsSecondary ? 'popup-secondary' : ''}}" wx:if="{{selectedWorldEventDetail}}"> ... </view> -->
+
+  </view> <!-- End page-content -->
+
+  <!-- 新增：中国历史面板 -->
+  <view class="chinese-history-panel {{showChineseHistoryPanel ? 'panel-active' : ''}}">
+    <view class="panel-header">
+      <text class="panel-title">{{buttonLabelMap[selectedPeriod]}} 中国重要事件</text>
+      <button class="close-panel-button" bindtap="onCloseChineseHistoryPanel">关闭</button>
+    </view>
+    <scroll-view scroll-y="true" class="panel-content">
+      <view wx:if="{{currentChineseHistoryEvents.length > 0}}">
+        <view wx:for="{{currentChineseHistoryEvents}}" wx:key="id" class="chinese-event-item"
+              bindtap="onChineseEventTap" data-id="{{item.id}}">
+          <text class="chinese-event-title"><text class="event-map-label">[{{item.mapLabel}}]</text> {{item.title}}👆</text>
+          <text class="chinese-event-time">（{{item.startYearDisplay}}{{item.endYearDisplay && item.endYearDisplay !== item.startYearDisplay ? ' - ' + item.endYearDisplay : ''}}）</text>
+          <view class="chinese-event-location" wx:if="{{item.locationName}}">
+            <text class="location-icon">📍</text> {{item.locationName}}
+          </view>
+          <text class="chinese-event-description">{{item.details || item.description}}</text>
+        </view>
+      </view>
+      <view wx:else class="no-chinese-events">
+        <text>暂无该时期对应的中国历史详细数据。</text>
+      </view>
+      
+      <!-- 添加赞助说明和广告 -->
+      <view class="sponsor-message">
+        <view class="sponsor-title">🙏 您的支持是作者前进的动力 🙏</view>
+        <text class="sponsor-text">感谢您使用<text class="sponsor-text-highlight">虎大王历史时空图</text>！作者致力于为您提供最优质的历史学习体验。为了能够<text class="sponsor-text-highlight">持续更新历史事件</text>、开发新功能并维护服务器，作者需要您的帮助。</text>
+        <text class="sponsor-text">点击下方广告，不花一分钱就能支持作者！您的每次点击，都让这个小小的历史工具能够走得更远、帮助更多人了解历史。</text>
+        <ad-custom unit-id="adunit-7738675e4ef88ca7" bindload="adLoad" binderror="adError" bindclose="adClose"></ad-custom>
+      </view>
+    </scroll-view>
   </view>
+
+  <!-- 世界历史面板 -->
+  <view class="world-history-panel {{showWorldHistoryPanel ? 'panel-active' : ''}}">
+    <view class="panel-header">
+      <text class="panel-title">{{buttonLabelMap[selectedPeriod]}} 世界重要事件</text>
+      <button class="close-panel-button" bindtap="onCloseWorldHistoryPanel">关闭</button>
+    </view>
+    <scroll-view scroll-y="true" class="panel-content">
+      <view wx:if="{{currentWorldHistoryEvents.length > 0}}">
+        <view wx:for="{{currentWorldHistoryEvents}}" wx:key="id" class="world-event-item"
+              bindtap="onWorldEventTap" data-id="{{item.id}}">
+          <text class="world-event-title-orange">
+            <text class="world-event-map-label">[{{item.mapLabel}}]</text> {{item.title}}👆
+          </text>
+          <text class="world-event-time">（{{item.startYearDisplay}}{{item.endYearDisplay ? ' - ' + item.endYearDisplay : ''}}）</text>
+          <view class="world-event-location" wx:if="{{item.locationName}}">
+            <text class="location-icon">📍</text> {{item.locationName}}
+          </view>
+          <text class="world-event-description">{{item.details || '暂无详细描述'}}</text>
+        </view>
+      </view>
+      <view wx:else class="no-world-events">
+        <text>暂无该时期对应的世界历史数据。</text>
+      </view>
+      
+      <!-- 添加世界历史面板赞助说明和广告 -->
+      <view class="sponsor-message">
+        <view class="sponsor-title">❤️ 您的每次点击都是支持 ❤️</view>
+        <text class="sponsor-text">喜欢这个历史地图小程序吗？如果它对您学习历史有所帮助，请考虑支持作者！只需点击下方广告，就能为作者提供动力，让作者添加更多<text class="sponsor-text-highlight">世界历史事件</text>和<text class="sponsor-text-highlight">改进用户体验</text>。</text>
+        <text class="sponsor-text">感谢您的理解与支持，作者将继续努力为您提供更好的历史学习工具！</text>
+        <ad-custom unit-id="adunit-7738675e4ef88ca7" bindload="adLoad" binderror="adError" bindclose="adClose"></ad-custom>
+      </view>
+    </scroll-view>
+    <!-- 添加调试信息，显示事件总数 -->
+    <view class="debug-info">
+      <text>当前共有 {{currentWorldHistoryEvents.length}} 个世界事件</text>
+    </view>
+  </view>
+
+  <!-- 新增：搜索面板 -->
+    <view class="search-panel {{showSearchPanel ? 'panel-active' : ''}}">
+    <view class="panel-header">
+      <text class="panel-title">搜索历史事件</text>
+      <button class="close-panel-button" bindtap="onCloseSearchPanel">关闭</button>
+    </view>
+    <!-- 新的统一搜索区域 -->
+    <view class="search-unified-container">
+      <view class="search-instruction-icon">🔍</view>
+      <view class="search-input-wrapper">
+        <input 
+          class="search-input" 
+          placeholder="输入关键字搜索历史事件" 
+          value="{{searchKeyword}}"
+          bindinput="onSearchInputChange"
+          confirm-type="search"
+          bindconfirm="onSearchConfirm"
+          focus="{{true}}"
+        />
+        <button class="search-button-small" bindtap="onSearchConfirm">搜索</button>
+      </view>
+      <view class="search-examples" wx:if="{{!hasSearched || !(searchResults.chinaEvents.length > 0 || searchResults.worldEvents.length > 0)}}">
+        例如：刘备、唐朝、楚汉之争、丝绸之路等
+      </view>
+    </view>
+    <!-- 搜索结果区域 -->
+    <scroll-view scroll-y="true" class="panel-content">
+      <view wx:if="{{searchResults.chinaEvents.length > 0 || searchResults.worldEvents.length > 0}}">
+        <view class="search-result-category" wx:if="{{searchResults.chinaEvents.length > 0}}">
+          <text class="search-category-title">中国历史事件</text>
+          <view 
+            wx:for="{{searchResults.chinaEvents}}" 
+            wx:key="id" 
+            class="search-event-item china-event-item"
+            bindtap="onSearchResultTap" 
+            data-type="china" 
+            data-id="{{item.id}}"
+            data-period="{{item.period}}"
+          >
+            <view class="search-event-title">
+              <block wx:for="{{formatter.parseHighlightedText(item.title)}}" wx:for-item="textPart" wx:key="index">
+                <text wx:if="{{textPart.highlight}}" class="highlight-text">{{textPart.text}}</text>
+                <text wx:else>{{textPart.text}}</text>
+              </block>
+              <text>👆</text>
+            </view>
+            <text class="search-event-time">
+              （{{item.startYearDisplay}}{{item.endYearDisplay ? ' - ' + item.endYearDisplay : ''}}） 
+              <text class="search-event-period">【{{buttonLabelMap[item.period] || item.period}}】</text>
+            </text>
+            <view class="search-event-description">
+              <block wx:for="{{formatter.parseHighlightedText(item.details || item.description || '暂无详细描述')}}" wx:for-item="textPart" wx:key="index">
+                <text wx:if="{{textPart.highlight}}" class="highlight-text">{{textPart.text}}</text>
+                <text wx:else>{{textPart.text}}</text>
+              </block>
+            </view>
+          </view>
+        </view>
+        <view class="search-result-category" wx:if="{{searchResults.worldEvents.length > 0}}">
+          <text class="search-category-title">世界历史事件</text>
+          <view 
+            wx:for="{{searchResults.worldEvents}}" 
+            wx:key="id" 
+            class="search-event-item world-event-item"
+            bindtap="onSearchResultTap" 
+            data-type="world" 
+            data-id="{{item.id}}"
+            data-year="{{item.startYear}}"
+          >
+            <view class="search-event-title world-event-title-orange">
+              <block wx:for="{{formatter.parseHighlightedText(item.title)}}" wx:for-item="textPart" wx:key="index">
+                <text wx:if="{{textPart.highlight}}" class="highlight-text">{{textPart.text}}</text>
+                <text wx:else>{{textPart.text}}</text>
+              </block>
+              <text>👆</text>
+            </view>
+            <text class="search-event-time">
+              （{{item.startYearDisplay}}{{item.endYearDisplay ? ' - ' + item.endYearDisplay : ''}}）
+            </text>
+            <view class="search-event-description">
+              <block wx:for="{{formatter.parseHighlightedText(item.description || '暂无详细描述')}}" wx:for-item="textPart" wx:key="index">
+                <text wx:if="{{textPart.highlight}}" class="highlight-text">{{textPart.text}}</text>
+                <text wx:else>{{textPart.text}}</text>
+              </block>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:elif="{{hasSearched && searchKeyword && searchKeyword.length > 0}}" class="no-search-results">
+        <text>未找到与"{{searchKeyword}}"相关的历史事件</text>
+      </view>
+      
+      <!-- 添加底部赞助说明 - 升级卡片式设计 -->
+      <view class="sponsor-card">
+        <view class="sponsor-card-icon">❤️</view>
+        <view class="sponsor-title">帮助完善搜索功能</view>
+        <text class="sponsor-text">感谢您使用虎大王历史时空图！正努力收集更多历史资料，提升搜索质量。点击下方广告支持作者，让这个小程序能够走得更远！</text>
+        
+        <!-- 添加底部广告组件 -->
+        <view class="ad-container">
+          <ad-custom unit-id="adunit-ae4fa1490069ca56" bindload="adLoad" binderror="adError" bindclose="adClose"></ad-custom>
+        </view>
+      </view>
+      
+      <!-- 添加底部间距 -->
+      <view style="height: 30rpx;"></view>
+    </scroll-view>
+  </view>
+
 </view>

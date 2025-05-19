@@ -22,6 +22,32 @@
   width: 100%;
   /* height: 450rpx; */ /* 移除固定高度 */
   flex: 1; /* 让地图占据所有可用垂直空间 */
+  position: relative; /* 新增：为了让内部绝对定位的按钮生效 */
+}
+
+/* 新增：一键重置地图视角按钮 (指北针) */
+.reset-map-button {
+  /* 注释掉指南针样式 
+  position: absolute;
+  top: 80rpx; 
+  left: 20rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  */
+  display: none; /* 隐藏指南针按钮 */
+}
+
+.reset-map-icon {
+  /* 注释掉指南针图标样式
+  width: 50rpx;
+  height: 50rpx;
+  */
+  display: none; /* 隐藏指南针图标 */
 }
 
 /* 新增：底部控件容器 */
@@ -110,7 +136,7 @@
   transform: translate(-50%, -50%);
   width: 16rpx;
   height: 50rpx; /* 保持高度 */
-  background-color: #e64340;
+  background-color: #2196F3;
   border-radius: 2rpx;
   z-index: 10; 
   transition: left 0.3s ease;
@@ -163,7 +189,7 @@
   transform: translateX(-50%) translateY(50%); /* 水平居中并调整垂直位置 */
   width: 12rpx; /* 指示器宽度 */
   height: 30rpx; /* 指示器高度 */
-  background-color: #e54d42; /* 指示器颜色 */
+  background-color: #2196F3; /* 修改为蓝色 */
   border-radius: 2rpx;
   z-index: 1; /* 确保在标签上方 */
 }
@@ -191,7 +217,7 @@
 
 .period-buttons-scroll {
   width: 100%;
-  height: 90rpx; /* 保持高度 */
+  height: 100rpx; /* 增加高度，从90rpx改为100rpx */
 }
 
 .period-buttons-content {
@@ -199,7 +225,7 @@
   flex-direction: row; /* 保持横向排列 */
   white-space: nowrap; /* 保持不换行 */
   align-items: center; /* 保持垂直居中 */
-  padding: 0 10rpx; /* 保持左右边距 */
+  padding: 0 15rpx; /* 增加左右内边距，从10rpx改为15rpx */
   box-sizing: border-box;
 }
 
@@ -209,7 +235,9 @@
   align-items: center; /* 新增：垂直居中 Flex item (文本) */
   justify-content: center; /* 新增：水平居中 Flex item (文本) */
   padding: 15rpx 30rpx; 
-  margin: 0 10rpx; 
+  margin: 0 20rpx; /* 增加左右间距，从10rpx改为20rpx */
+  min-width: 100rpx; /* 增加最小宽度 */
+  height: 60rpx; /* 设置固定高度 */
   border-radius: 25rpx; 
   background-color: #f7f7f7; 
   color: #333; 
@@ -223,11 +251,11 @@
 
 /* 恢复之前的激活样式 */
 .period-button.active {
-  background-color: #448aff; /* 恢复之前的蓝色 */
+  background-color: #4CAF50; /* 统一为绿色 */
   color: #fff;
-  border-color: #448aff;
+  border-color: #4CAF50;
   font-weight: bold; /* 恢复之前的粗体 */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* 恢复之前的阴影 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 增强阴影效果 */
 }
 
 /* --- 确保 .timeline-item 样式仍然被移除 --- */
@@ -240,18 +268,22 @@
 
 /* --- 新增：自定义信息浮窗样式 --- */
 .custom-callout {
-  position: absolute;
-  top: 20rpx; /* 初始定位：距离地图顶部20rpx */
-  left: 50%; /* 水平居中 */
-  transform: translateX(-50%); /* 精确水平居中 */
-  width: 80%; /* 限制宽度为屏幕的80% */
-  max-width: 600rpx; /* 最大宽度限制 */
-  background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+  position: relative;
+  width: 100%; /* 占满父容器 (.popup-container) 宽度 */
+  /* max-width: 600rpx; */ /* 宽度由父容器控制 */
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 10rpx;
   padding: 20rpx;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 100; /* 确保在标记点之上 */
-  /* overflow: hidden; */ /* 如果内容可能溢出，考虑添加 */
+  cursor: pointer; /* 指示可点击 */
+  /* z-index: 100; */ /* z-index 由父容器控制 */
+  /* transition: top 0.3s ease; */ /* 移除 top 过渡 */
+}
+
+/* 指示浮窗可点击 */
+.custom-callout::after {
+  content: ""; /* 移除点击提示文本 */
+  display: none; /* 隐藏整个伪元素 */
 }
 
 .callout-title {
@@ -262,6 +294,49 @@
   word-wrap: break-word; /* 标题换行 */
 }
 
+/* 新增：信息栏中的标记序号样式 */
+.callout-marker-label {
+  display: inline-block;
+  font-weight: bold;
+  margin-right: 6rpx;
+  color: #2196F3; /* 默认为蓝色，与中国事件标记一致 */
+}
+
+/* 世界事件标记序号样式 */
+.callout-title.world-event-title .callout-marker-label,
+.world-event-detail-popup .callout-marker-label {
+  color: #FF8C00; /* 橙色，与世界事件标记一致 */
+}
+
+/* 新增：为国内事件 callout 的时间设置字体大小 */
+.callout-time {
+  font-size: 26rpx; /* 与世界事件时间字体大小一致 */
+  color: #666; /* 可以统一颜色 */
+  margin-bottom: 10rpx; /* 与标题保持一定间距 */
+}
+
+/* 新增：地点信息样式 */
+.callout-location {
+  font-size: 26rpx;
+  color: #555;
+  margin-bottom: 10rpx;
+  display: flex;
+  align-items: center;
+}
+
+.location-icon {
+  margin-right: 4rpx;
+}
+
+/* 新增：列表中的地点样式 */
+.chinese-event-location, .world-event-location {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 6rpx;
+  display: flex;
+  align-items: center;
+}
+
 .callout-details {
   font-size: 28rpx;
   color: #555;
@@ -270,6 +345,14 @@
   max-height: 250rpx;
   overflow-y: auto;
 }
+
+/* --- 移除：用于下移的弹窗样式 --- */
+/*
+.popup-secondary {
+  top: 200rpx !important; 
+}
+*/
+
 /* --- 样式结束 --- */
 
 /* ==================== 子时间轴样式 (压缩垂直空间) ==================== */
@@ -296,24 +379,1116 @@
 }
 
 .sub-timeline-bar {
+  position: relative;
   width: 100%;
-  height: 5px; /* 减小时间轴条高度 */
+  height: 16rpx; /* 或您期望的条的高度 */
   background-color: #e0e0e0; 
-  border-radius: 3px; /* 相应减小圆角 */
-  position: relative; 
+  border-radius: 8rpx;
+  margin-top: 8rpx;
 }
 
 .sub-timeline-indicator {
   position: absolute;
-  top: -1.5px; /* 调整垂直偏移以适应新高度 */
-  width: 8px; /* 减小指示器宽度 */
-  height: 8px; /* 减小指示器高度 */
-  background-color: #1AAD19; 
-  border: 1px solid #f0f0f0; 
-  box-sizing: border-box;
-  border-radius: 2px; 
-  transform: translateX(-50%); 
-  transition: left 0.3s ease; 
+  top: 0;
+  bottom: 0; /* 使其高度与父容器一致 */
+  /* width: 6rpx; */ /* 移除固定宽度，宽度将由 style 动态设置 */
+  background-color: #2196F3; /* 事件指示器颜色 (蓝色) */
+  border-radius: 8rpx; /* 与父容器一致或略小 */
   z-index: 1; 
+  transition: left 0.3s ease, width 0.3s ease; /* 为 left 和 width 添加过渡 */
+  min-width: 4rpx; /* 可以设置一个最小可见宽度，防止完全不可见 */
 }
+
+/* --- 修改：世界历史事件在子时间轴上的指示器样式 --- */
+.sub-timeline-indicator.world-event-indicator {
+  background-color: #FF8C00 !important;
+  /* 移除固定尺寸和圆形 */
+  /* width: 10px; */
+  /* height: 10px; */
+  /* border-radius: 50%; */
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  border-radius: 8rpx; /* 与父容器一致或略小 */
+  min-width: 4rpx; /* 保持最小可见宽度 */
+  transition: left 0.3s ease, width 0.3s ease; /* 添加过渡效果 */
+  z-index: 2; /* 确保在普通指示器之上 */
+}
+
+/* --- 新增：子时间轴指示器重叠时的半透明样式 --- */
+.sub-indicator-overlap {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+/* --- 结束新增 --- */
+
 /* ==================== 结束修改 ==================== */
+
+/* 新增：查看同期世界史按钮样式 */
+.world-history-trigger-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10rpx;
+  box-sizing: border-box;
+}
+
+/* 修改按钮样式，减小宽度适应三个按钮 */
+.history-button {
+  flex: 1;
+  margin: 0 5rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  text-align: center;
+  padding: 0;
+  background-color: #f8f8f8;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.chinese-history-button {
+  background-color: #2196F3;
+  color: white;
+}
+
+.world-history-button {
+  background-color: #FF8C00;
+  color: white;
+}
+
+.search-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* 搜索面板样式 - 全面重写 */
+.search-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom); /* 确保在iPhone X等设备上不会被Home指示条遮挡 */
+}
+
+.search-panel.panel-active {
+  display: flex;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.panel-title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.close-panel-button {
+  background-color: transparent;
+  color: #999;
+  border: none;
+  padding: 10rpx;
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.search-input-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 20rpx;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #f9f9f9;
+}
+
+.search-input-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 90%;
+  margin: 20rpx auto;
+}
+
+.search-input {
+  flex: 1;
+  height: 90rpx;
+  border: 1px solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 0 30rpx;
+  font-size: 32rpx;
+  background-color: white;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.05);
+}
+
+.search-button-small {
+  width: 140rpx;
+  height: 90rpx;
+  margin-left: 20rpx;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 32rpx;
+  line-height: 90rpx;
+  text-align: center;
+  border-radius: 8rpx;
+  padding: 0;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.1);
+}
+
+/* 这里添加一个正确的panel-content定义 */
+.panel-content {
+  flex: 1;
+  padding: 15rpx;
+  overflow-y: auto; /* 允许内容区滚动 */
+  box-sizing: border-box;
+  /* 移除高度限制，使面板内容可以填充整个屏幕 */
+}
+
+.search-result-category {
+  margin-bottom: 30rpx;
+}
+
+.search-category-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin: 10rpx 0 25rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1px solid #f0f0f0;
+  display: block;
+}
+
+.search-event-item {
+  padding: 15rpx 0;
+  border-bottom: 1px solid #f8f8f8;
+}
+
+.search-event-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.search-event-time {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.search-event-period {
+  font-size: 24rpx;
+  color: #4CAF50;
+}
+
+.search-event-description {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-top: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.no-search-results,
+.search-instruction {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.china-event-item .search-event-title {
+  color: #2196F3;
+}
+
+.world-event-item .search-event-title {
+  color: #FF8C00;
+}
+
+/* 已有面板样式（确保与搜索面板一致） */
+.chinese-history-panel,
+.world-history-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom); /* 确保在iPhone X等设备上不会被Home指示条遮挡 */
+}
+
+.chinese-history-panel.panel-active,
+.world-history-panel.panel-active {
+  display: flex;
+}
+
+/* 中国历史面板样式 - 删除此重复定义，用前面已修改过的定义 */
+/* .chinese-history-panel {
+  position: fixed; 
+  bottom: -100vh; 
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 16rpx 16rpx 0 0;
+  transition: bottom 0.3s ease-in-out;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh; 
+}
+
+.chinese-history-panel.panel-active {
+  bottom: 0; 
+} */
+
+.chinese-history-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10rpx;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10rpx;
+}
+
+.chinese-history-panel-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.chinese-history-item {
+  padding: 15rpx 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* 添加事件项序号样式 */
+.chinese-event-index {
+  display: inline-block;
+  color: #2196F3;
+  font-weight: bold;
+  margin-right: 8rpx;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border-bottom: 1px solid #eee;
+  background-color: #f7f7f7;
+}
+
+.panel-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-panel-button {
+  font-size: 28rpx;
+  color: #888;
+  background-color: transparent;
+  border: none;
+  padding: 5rpx 15rpx;
+  line-height: normal;
+}
+.close-panel-button::after {
+  border: none; /* 移除微信按钮默认边框 */
+}
+
+.chinese-event-item {
+  padding: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.chinese-event-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2196F3; /* 蓝色主题 */
+  display: block;
+}
+
+.chinese-event-time {
+  font-size: 26rpx;
+  color: #888;
+  margin: 8rpx 0;
+  display: block;
+}
+
+.chinese-event-description {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+  display: block;
+}
+
+.no-chinese-events {
+  padding: 40rpx;
+  text-align: center;
+  color: #999;
+}
+
+/* 修改世界史面板样式 - 删除此重复定义，用前面已修改过的定义 */
+/* .world-history-panel {
+  position: fixed; 
+  bottom: -100vh; 
+  left: 0;
+  right: 0;
+  padding: 20rpx;
+  background-color: white;
+  border-top-left-radius: 20rpx;
+  border-top-right-radius: 20rpx;
+  z-index: 999; 
+  max-height: 60vh; 
+  overflow-y: auto; 
+  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.1);
+  transition: bottom 0.3s ease; 
+}
+
+.world-history-panel.panel-active {
+  bottom: 0; 
+} */
+
+.world-history-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10rpx;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10rpx;
+}
+
+.world-history-panel-title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.world-history-item {
+  padding: 15rpx 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* 添加事件项序号样式 */
+.world-event-index {
+  display: inline-block;
+  color: #FF8C00;
+  font-weight: bold;
+  margin-right: 8rpx;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border-bottom: 1px solid #eee;
+  background-color: #f7f7f7;
+}
+
+.panel-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-panel-button {
+  font-size: 28rpx;
+  color: #888;
+  background-color: transparent;
+  border: none;
+  padding: 5rpx 15rpx;
+  line-height: normal;
+}
+.close-panel-button::after {
+  border: none;
+}
+
+.world-event-item {
+  padding: 15rpx 10rpx;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 10rpx;
+}
+
+.world-event-item:last-child {
+  border-bottom: none;
+}
+
+.world-event-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 8rpx;
+}
+
+.world-event-time {
+  display: block;
+  font-size: 24rpx;
+  color: #777;
+  margin-bottom: 8rpx;
+}
+
+.world-event-description {
+  display: block;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+}
+
+.no-world-events {
+  padding: 40rpx;
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 新增：世界历史事件详情浮层样式 */
+.world-event-detail-popup {
+  /* position: absolute; */ /* 移除 */
+  /* top: 20rpx; */ /* 移除 */
+  /* left: 50%; */ /* 移除 */
+  /* transform: translateX(-50%); */ /* 移除 */
+  width: 100%; /* 占满父容器 (.popup-container) 宽度 */
+  /* max-width: 700rpx; */ /* 宽度由父容器控制 */
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10rpx;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  /* z-index: 1001; */ /* z-index 由父容器控制 */
+  padding: 20rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* transition: top 0.3s ease; */ /* 移除 top 过渡 */
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15rpx;
+  margin-bottom: 15rpx;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.popup-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-popup-button {
+  font-size: 26rpx;
+  color: #888;
+  background-color: transparent;
+  border: none;
+  padding: 5rpx 10rpx;
+  line-height: normal;
+}
+.close-popup-button::after {
+  border: none;
+}
+
+.popup-content {
+  max-height: 40vh; /* 限制内容区最大高度，使其可滚动 */
+  overflow-y: auto;
+}
+
+.popup-content .event-title { /* 复用并调整 */
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.popup-content .event-time {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+}
+
+.popup-content .event-description {
+  display: block;
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* ... (可能需要调整地图下方控件的 padding-bottom 以免被遮挡) ... */
+.bottom-controls {
+  /* ... existing styles ... */
+  /* padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx); */ /* 示例：如果浮层固定在底部，可能需要给底部控件留出更多空间 */
+}
+
+/* --- 新增：弹窗容器样式 --- */
+.popup-container {
+  position: absolute;
+  top: 20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%; /* 调整容器宽度 */
+  max-width: 700rpx; /* 最大宽度 */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 水平居中内部弹窗 */
+  pointer-events: none; /* 容器本身不响应点击，让内部元素响应 */
+}
+
+.popup-container > view {
+  pointer-events: auto; /* 确保内部弹窗可以响应点击 */
+  width: 100%; /* 内部弹窗宽度占满容器 */
+  box-sizing: border-box;
+  margin-bottom: 10rpx; /* 弹窗之间的间距 */
+}
+
+/* 确保弹窗能够正确响应点击事件 */
+.custom-callout {
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0,0,0,0); /* 移除移动端点击时的高亮效果 */
+  user-select: none; /* 防止文本选择干扰点击 */
+}
+
+.popup-container > view:last-child {
+  margin-bottom: 0; /* 最后一个弹窗无下边距 */
+}
+/* --- 结束新增 --- */
+
+/* 主弹窗默认位置 */
+.popup-container > .custom-callout,
+.popup-container > .world-event-detail-popup {
+  top: 40rpx;
+}
+
+/* secondary 弹窗下移，避免重叠 */
+.popup-container > .popup-secondary {
+  top: 220rpx !important;
+  z-index: 20;
+}
+
+/* 关闭按钮始终在弹窗右上角 */
+.callout-close-btn,
+.popup-close-btn {
+  position: absolute;
+  top: 12rpx;
+  right: 24rpx;
+  font-size: 24rpx; /* 减小字体 */
+  color: #999; /* 改为淡灰色 */
+  font-weight: normal; /* 移除粗体 */
+  z-index: 100;
+  background-color: transparent; /* 移除背景色 */
+  padding: 5rpx 10rpx;
+  border: none; /* 移除边框 */
+  border-radius: 4rpx; 
+  line-height: 1.2;
+}
+.callout-close-btn:active,
+.popup-close-btn:active {
+  color: #4CAF50;
+}
+
+/* 保证弹窗内容不会被按钮遮挡 */
+.custom-callout .callout-title,
+.world-event-detail-popup .popup-title {
+  margin-right: 60rpx;
+}
+
+/* 弹窗内容样式优化 */
+.custom-callout,
+.world-event-detail-popup {
+  box-sizing: border-box;
+  word-break: break-all;
+  overflow: visible;
+}
+
+/* 兼容小屏幕弹窗最大宽度 */
+@media screen and (max-width: 500px) {
+  .popup-container > .custom-callout,
+  .popup-container > .world-event-detail-popup {
+    max-width: 98vw;
+    min-width: 0;
+    padding: 24rpx 8rpx 16rpx 8rpx;
+  }
+}
+
+/* secondary 弹窗的关闭按钮也要绝对定位在右上角，z-index最高 */
+.popup-secondary .callout-close-btn,
+.popup-secondary .popup-close-btn {
+  position: absolute;
+  top: 12rpx;
+  right: 24rpx;
+  font-size: 28rpx;
+  color: #888;
+  z-index: 100;
+  cursor: pointer;
+  background: none;
+  padding: 0 10rpx;
+  border: none;
+  line-height: 1;
+}
+.popup-secondary .callout-close-btn:active,
+.popup-secondary .popup-close-btn:active {
+  color: #4CAF50;
+}
+
+/* 新增：事件标记序号样式 */
+.event-map-label {
+  display: inline-block;
+  color: #2196F3;
+  font-weight: bold;
+  margin-right: 6rpx;
+}
+
+.world-event-item .event-map-label {
+  color: #FF8C00; /* 世界事件序号为橙色，与地图标记一致 */
+}
+
+.world-event-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.world-event-index {
+  color: #FF8C00;
+  font-weight: bold;
+  margin-right: 10rpx;
+  font-size: 28rpx;
+}
+
+.world-event-title {
+  font-weight: bold;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.world-event-time {
+  color: #666;
+  font-size: 24rpx;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.world-event-description {
+  font-size: 26rpx;
+  color: #444;
+  display: block;
+}
+
+/* 调试信息显示 */
+.debug-info {
+  padding: 10rpx;
+  font-size: 22rpx;
+  color: #999;
+  text-align: center;
+  border-top: 1rpx solid #eee;
+}
+
+/* 确保面板的滚动区域足够高 - 注释掉这里，保留前面的定义 */
+/* .panel-content {
+  max-height: 60vh;
+  overflow-y: auto;
+} */
+
+/* 调整世界事件条目间距 */
+.world-event-item {
+  padding: 16rpx 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.world-event-item:last-child {
+  border-bottom: none;
+}
+
+/* 世界事件主时间轴指示器 */
+.world-event-on-main-timeline {
+  position: absolute;
+  top: 0;
+  width: 12rpx;
+  height: 30rpx;
+  background-color: #FF8C00; /* 橙色 */
+  border-radius: 2rpx;
+  z-index: 2;
+}
+
+/* 世界事件面板序号 */
+.world-history-panel .event-index-label {
+  color: #FF8C00;
+  font-weight: bold;
+  margin-right: 8rpx;
+}
+
+/* 世界史面板橙色序号 */
+.world-event-map-label {
+  display: inline-block;
+  color: #FF8C00;
+  font-weight: bold;
+  margin-right: 6rpx;
+}
+
+/* 世界史面板橙色标题 */
+.world-event-title-orange {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #FF8C00;
+  display: block;
+}
+
+/* 世界史面板时间和描述样式与中国史一致 */
+.world-event-time {
+  font-size: 26rpx;
+  color: #888;
+  margin: 8rpx 0;
+  display: block;
+}
+
+.world-event-description {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+  display: block;
+}
+
+.chinese-event-title-blue {
+  color: #2196F3;
+  font-weight: bold;
+  font-size: 32rpx;
+  display: block;
+}
+
+.world-event-title-orange {
+  color: #FF8C00;
+  font-weight: bold;
+  font-size: 32rpx;
+  display: block;
+}
+
+.world-event-marker-label {
+  color: #FF8C00 !important;
+}
+
+/* 黄色高亮文本样式 */
+.highlight-text {
+  color: #FF8C00;
+  font-weight: bold;
+  background-color: rgba(255, 140, 0, 0.1);
+  padding: 0 4rpx;
+  border-radius: 4rpx;
+}
+
+/* 搜索面板样式优化 */
+.search-event-title, .search-event-description {
+  word-break: break-all; /* 确保长文本正常换行 */
+  line-height: 1.5;
+}
+
+/* 赞助信息容器样式 */
+.sponsor-message {
+  margin: 30rpx 20rpx;
+  padding: 20rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+}
+
+/* 赞助文字样式 */
+.sponsor-text {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 20rpx;
+  text-align: center;
+  display: block;
+  padding: 0 10rpx;
+}
+
+/* 赞助文字强调部分 */
+.sponsor-text-highlight {
+  color: #2196F3;
+  font-weight: bold;
+}
+
+/* 赞助标题样式 */
+.sponsor-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2196F3;
+  text-align: center;
+  margin-bottom: 15rpx;
+  text-shadow: 0 1rpx 2rpx rgba(0,0,0,0.1);
+}
+
+/* 搜索框提示美化 */
+.search-instruction {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx 0;
+  color: #666;
+  font-size: 30rpx;
+  text-align: center;
+}
+
+.search-instruction-icon {
+  font-size: 80rpx;
+  margin-bottom: 30rpx;
+  color: #4CAF50;
+}
+
+.search-instruction text {
+  margin-bottom: 15rpx;
+}
+
+.search-examples {
+  font-size: 26rpx;
+  color: #999;
+  margin-top: 10rpx;
+}
+
+/* 搜索结果优化 */
+.search-result-category {
+  margin-bottom: 40rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  padding: 20rpx;
+}
+
+.search-category-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin: 10rpx 0 25rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1px solid #f0f0f0;
+  display: block;
+}
+
+.search-event-item {
+  padding: 20rpx 15rpx;
+  border-bottom: 1px solid #f8f8f8;
+  transition: background-color 0.2s;
+}
+
+.search-event-item:active {
+  background-color: #f9f9f9;
+}
+
+.search-event-item:last-child {
+  border-bottom: none;
+}
+
+/* 新的统一搜索区域样式 */
+.search-unified-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 30rpx;
+  background-color: #f9f9f9;
+  border-radius: 16rpx;
+  margin: 20rpx 15rpx 30rpx;
+  box-shadow: 0 2rpx 20rpx rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.search-unified-container .search-instruction-icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+  color: #4CAF50;
+  text-shadow: 0 2rpx 10rpx rgba(76,175,80,0.2);
+}
+
+.search-unified-container .search-input-wrapper {
+  display: flex;
+  width: 100%;
+  position: relative;
+  margin: 10rpx 0;
+}
+
+.search-unified-container .search-input {
+  flex: 1;
+  height: 90rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 45rpx;
+  padding: 0 30rpx;
+  font-size: 32rpx;
+  background-color: white;
+  box-shadow: 0 2rpx 15rpx rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.search-unified-container .search-input:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 2rpx 15rpx rgba(76,175,80,0.15);
+}
+
+.search-unified-container .search-button-small {
+  width: 140rpx;
+  height: 90rpx;
+  margin-left: 20rpx;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 32rpx;
+  line-height: 90rpx;
+  text-align: center;
+  border-radius: 45rpx;
+  padding: 0;
+  box-shadow: 0 2rpx 15rpx rgba(76,175,80,0.2);
+  transition: all 0.3s ease;
+}
+
+.search-unified-container .search-button-small:active {
+  transform: scale(0.98);
+  box-shadow: 0 1rpx 5rpx rgba(76,175,80,0.2);
+}
+
+.search-unified-container .search-examples {
+  font-size: 28rpx;
+  color: #777;
+  margin-top: 20rpx;
+  text-align: center;
+}
+
+/* 美化搜索结果区域 */
+.panel-content {
+  background-color: #fff;
+  border-radius: 16rpx;
+  margin: 0 15rpx 20rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.03);
+}
+
+.no-search-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx 30rpx;
+  color: #666;
+  font-size: 30rpx;
+  text-align: center;
+}
+
+/* 修改搜索结果卡片样式 */
+.search-result-category {
+  margin-bottom: 40rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 15rpx rgba(0,0,0,0.05);
+  padding: 25rpx;
+  border-left: 6rpx solid #4CAF50;
+}
+
+.search-category-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin: 10rpx 0 25rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1px solid #f0f0f0;
+  display: block;
+}
+
+/* 新增卡片式赞助区域样式 */
+.sponsor-card {
+  margin: 40rpx 15rpx 30rpx;
+  padding: 30rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-top: 8rpx solid #4CAF50;
+}
+
+.sponsor-card-icon {
+  font-size: 60rpx;
+  margin-bottom: 15rpx;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.sponsor-card .sponsor-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.sponsor-card .sponsor-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 25rpx;
+}
+
+.ad-container {
+  width: 100%;
+  margin-top: 15rpx;
+  padding: 15rpx;
+  background-color: #f9f9f9;
+  border-radius: 12rpx;
+  box-shadow: inset 0 0 10rpx rgba(0,0,0,0.03);
+}
+
+/* 调整搜索结果项目的样式 */
+.search-event-item {
+  padding: 25rpx 20rpx;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.search-event-item:active {
+  background-color: #f8f8f8;
+  transform: translateX(5rpx);
+}
+
+.search-event-item:last-child {
+  border-bottom: none;
+}
+
+.search-event-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  margin-bottom: 12rpx;
+}
+
+.highlight-text {
+  color: #FF8C00;
+  font-weight: bold;
+  background-color: rgba(255, 140, 0, 0.1);
+  padding: 0 6rpx;
+  border-radius: 6rpx;
+}

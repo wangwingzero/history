@@ -1,0 +1,99 @@
+.detail-container {
+  padding: 30rpx;
+  background-color: #f8f8f8;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.event-info {
+  background-color: #fff;
+  padding: 30rpx;
+  border-radius: 10rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.event-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15rpx;
+}
+
+.event-time {
+  display: block;
+  font-size: 28rpx;
+  color: #888;
+  margin-bottom: 20rpx;
+}
+
+.event-description {
+  display: block;
+  font-size: 30rpx;
+  color: #555;
+  line-height: 1.7;
+}
+
+.timeline-context {
+  margin-top: 40rpx;
+  background-color: #fff;
+  padding: 30rpx;
+  border-radius: 10rpx;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.context-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+/* --- 复制并调整自 pages/index/index.wxss 的子时间轴样式 --- */
+.sub-timeline-container.detail-timeline { /* 添加 detail-timeline 类以区分 */
+  width: 100%; /* 详情页内占满容器宽度 */
+  margin: 20px auto 10px; /* 调整边距 */
+  padding: 5px 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.sub-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx; /* 调整字号 */
+  color: #666;
+  margin-bottom: 5px;
+  padding: 0 10px;
+}
+
+.sub-timeline-label-start,
+.sub-timeline-label-end {
+  white-space: nowrap;
+}
+
+.sub-timeline-bar {
+  width: 100%;
+  height: 8px; /* 稍微加高一点 */
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  position: relative;
+}
+
+.sub-timeline-indicator { /* 指示器样式保持一致 */
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%); /* 垂直居中 */
+  width: 12px; 
+  height: 12px; 
+  background-color: #1AAD19;
+  border: 1px solid #f0f0f0;
+  box-sizing: border-box;
+  border-radius: 3px;
+  transition: left 0.3s ease;
+  z-index: 1;
+}
+/* --- 结束复制调整 --- */ 

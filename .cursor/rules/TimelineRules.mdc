@@ -1,0 +1,63 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 主时间轴与子时间轴逻辑
+globs: ["pages/index/index.js", "pages/index/index.wxml", "pages/index/index.wxss"]
+alwaysApply: true
+---
+
+# 主时间轴与子时间轴逻辑
+
+## 主时间轴 (Static History Ruler)
+
+- **结构与定义**：主时间轴的视觉结构在 [pages/index/index.wxml](mdc:pages/index/index.wxml) 中由 `.static-history-ruler-container` 及其子元素定义。其样式在 [pagesindex.wxss](mdc:pages/index/index.wxss) 中控制。
+- **固定刻度标签**：
+  - 时间轴背景上显示的数字年份标签（如 -2500, -2000, ..., 2500）由 [pages/index/index.js](mdc:pages/index/index.js) 中的 `generateNumericalLabels` 函数生成。
+  - 该函数使用固定的 `TIMELINE_DISPLAY_START` (-2500) 和 `TIMELINE_DISPLAY_END` (2500) 作为时间轴的起止点，通常按 `TIMELINE_STEP` (500年) 的间隔生成标签。
+  - 每个标签的位置（百分比）是相对于这个固定范围计算的。
+- **中国历史时期指示器**：
+  - 一个绿色的竖条指示器（`.ruler-indicator`）在主时间轴上显示当前选中的中国历史时期的**起始年份**位置。
+  - "早期文明与起源"时期不显示此指示器。
+  - 指示器的位置（`currentRulerPosition`，一个百分比值）在 `onPeriodTap` 事件中通过调用 `calculateAndSetPosition` 函数来计算和设置。
+  - `calculateAndSetPosition` 使用选中时期的起始年份（来自 `dynastyStartYearsMap`），并根据 `TIMELINE_DISPLAY_START` 和 `TIMELINE_DISPLAY_END` 将其归一化为百分比。早于 `TIMELINE_DISPLAY_START` 的年份会被视为 `TIMELINE_DISPLAY_START` 进行定位。
+- **世界历史事件指示器 (主时间轴)**：
+  - 当用户点击世界历史事件（从面板或地图标记）并显示其详情浮窗时，一个小的**橙色**竖条指示器 (`.world-event-on-main-timeline`) 会出现在主时间轴上，标记该世界事件的**起始年份**位置。
+  - 其位置（`worMainTimelinePosition`，百分比）由 `calculateWorldEventTimelinePositions` 函数计算，同样相对于 `TIMELINE_DISPLAY_START` 和 `TIMELINE_DISPLAY_END` 进行归一化。
+  - 关闭世界事件详情浮窗时，此指示器会消失。
+
+## 子时间轴 (Sub-Timeline)
+
+- **显示条件与结构**：
+  - 子时间轴（`.sub-timeline-container`）仅在当前选中的中国历史时期**不是**"早期文明与起源"时显示。
+  - 它用于展示当前中国历史时期的精确起止年份。
+- **内容与控制**：
+  - 子时间轴的起止年份标签（`subTimelineStartLabel`, `subTimelineEndLabel`）和实际年份（`subTimelineStartYear`, `subTimelineEndYear`p` 事件中，通过 `updateSubTimeline` 函数根据选定时期从 `dynastyStartYearsMap` 和 `comprehensiveTimePeriods` 计算得出并设置。
+  - `showSubTimeline` data 属性控制其整体的显示与隐藏。
+- **中国历史事件指示器 (子时间轴)**：
+  - 当用户点击地图上的中国历史事件标记 (`onMarkerTap`)，并且该事件的详情浮窗 (`selectedMarkerInfo`) 显示时，一条**绿色**的条状指示器 (`.sub-timeline-indicator`) 会出现在子时间轴上。
+  - 该指示器的起始位置 (`selectedEventStartYearPosition`，百分比) 和宽度 (`selectedEventDurationWidth`，百分比) 表示该事件的起止年份相对于当前子时间轴所示时期的范围。
+  - 这些值由 `calculateAndSetSubTimelineIndicator` 函数计算。
+  - 当关闭事件浮窗 (如点击地图空白 `onMapTap`) 或切换到新时期 (`onPeriodTap`) 时，此指示器会消失。
+- **世界历史事件指示器 (子时间轴)**：
+  - 当用户点击世界历史事件并显示其详情浮窗 (`selectedWorldEventDetail`) 时，如果该世界事件的时间范围与当前子时间轴显示的中国时期有重叠，一条**橙色**的条状指示器 (`.sub-timeline-indicator.world-event-indicator`) 也会出现在子时间轴上。
+  - 其位置 (`worldEventOnSubTimelinePosition`) 和宽度 (`worldEventOnSubTimelineDurationWidth`) 由 `calculateWorldEventTimelinePositions` 函数计算，逻辑与中国事件指示器类似，但基于世界事件的年份。
+  - **重叠处理**：如果中国事件指示器和世界事件指示器在子时间轴上同时显示且时间范围有重叠，`_checkAndUpdateSubTimelineOverlap` 函数会检测到此情况，并通过设置 `subTimelineWorldEventIsOverlap` 为 `true`，通常使得世界事件的指示器条变为半透明（通过 `.sub-indicator-overlap` 类实现），以区分层次。
+
+## 时期选择与面板交互
+
+- **时期选择按钮**：
+  - 页面底部有一个横向滚动的视图（`.period-buttons-scroll`），包含代表各个中国历史时期的按钮。
+  - 这些按钮由 `comprehensiveTimePeriods` 数组和 `buttonLabelMap` 对象在 [pages/index/index.js](mdc:pages/index/index.js) 中定义和生成。
+  - 点击任一时期按钮会触发 `onPeriodTap` 事件。
+- **`onPeriodTap` 核心逻辑**：
+  - 更新 `selectedPeriod` 状态。
+  - 调用 `calculateAndSetPosition` 更新主时间轴指示器。
+  - 调用 `updateSubTimeline` 更新子时间轴的显示和内容。
+  - 清空所有已选中的事件详情（`selectedMarkerInfo`, `selectedWorldEventDetail`）和相关的指示器位置。
+  - 关闭所有历史事件面板（中国史 `.chinese-history-panel` 和世界史 `.world-history-panel`）。
+  - 调用 `_refreshActiveWorldEvents` 重新加载并筛选与新时期相关的世界历史事件（但不立即显示面板）。
+  - 调用 `loadAndDisplayDynastyBorders` 加载并显示新时期的疆域。
+  - 调用 `updateMarkersForPeriod` 清除旧标记并加载、显示新时期的中国历史事件标记（此时也会根据 `currentWorldHistoryEvents` 添加世界事件标记）。

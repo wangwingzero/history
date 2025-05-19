@@ -1,0 +1,23 @@
+<view class="detail-container">
+  <view class="event-info">
+    <text class="event-title">{{event.title}}</text>
+    <text class="event-time">{{event.startYearDisplay}} {{event.endYearDisplay ? ' - ' + event.endYearDisplay : ''}}</text>
+    <text class="event-description">{{event.description}}</text>
+  </view>
+
+  <view class="timeline-context" wx:if="{{chinesePeriodName}}">
+    <text class="context-title">在 {{chinesePeriodName}} 时间轴上的位置</text>
+    <!-- 这里将放置类似子时间轴的结构 -->
+    <view class="sub-timeline-container detail-timeline">
+      <view class="sub-timeline-labels">
+        <text class="sub-timeline-label-start">{{chinesePeriodStartLabel}}</text>
+        <text class="sub-timeline-label-end">{{chinesePeriodEndLabel}}</text>
+      </view>
+      <view class="sub-timeline-bar">
+        <view class="sub-timeline-indicator"
+              wx:if="{{eventPositionOnTimeline !== null}}"
+              style="left: {{eventPositionOnTimeline}}%;"></view>
+      </view>
+    </view>
+  </view>
+</view> 

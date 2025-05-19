@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 地图标记点处理逻辑
+globs: ["pages/index/index.js", "pages/index/index.wxml"]
+alwaysApply: true
+---
+
+# 地图标记点 (Marker) 处理逻辑
+
+## Marker 数ges/index/index.js](mdc:pages/index/index.js) 中的 `updateMarkersForPeriod` (及其辅助 `_continueUpdateMarkers`) 是负责为当前选定时期准备和显示所有地图标记点的核心。
+
+- **中国历史事件 Marker**：
+  - 根据当前选定时期 (`selectedPeriod`) 的年份范围，从 `allChinaHistoryData` 中筛选出相关事件。
+  - 筛选出的事件按 `startYear` (然后按 `originalId`) 排序。
+  - 调用 `dinates` 对地理坐标相近的事件进行微小偏移。
+  - 排序和偏移后的事件列表存储在 `this.currentPeriodDisplayableEvents` 中。
+  - 为 `currentPeriodDisplayableEvents` 中的每个事件生成一个 marker 对象。**marker 的 `id` 是该事件在 `currentPeriodDisplayableEvents` 数组中的索引 (0, 1, 2...)**。这确保了地图标记 `id` 与其在当前时期事件列表中的顺序一致，方便点击时查找。
+  - `label.content` 显示的是 `index + 1`，即从1开始的序号。
+  - `iconPath` 使用 `NORMAL_ICON_PATH` (蓝色图钉)。
+
+- **世界历史事件 Marker**：
+  - 在 `onPeriodTap` 或 `onToggleWorldHistoryPanel` 触发 `_refreshActiveWorldEvents` 时，会根据当前中国时期的年份范围筛选出相关的世界历史事件，并进行排序、添加 `mapLabel` 序号，存入 `currentWorldHistoryEvents`。
+  - `updateMarkersForPeriod` (在其内部的 `_continueUprentWorldHistoryEvents`。
+  - 如果有世界事件，它们也会经过 `adjustOverlappingCoordinates` 进行坐标偏移处理。
+  - 为每个有效的世界事件生成 marker 对象。
+  - **marker 的 `id` 是 `200 + index`** (其中 `index` 是其在经过筛选和坐标调整后的 `currentWorldHistoryEvents` 数组中的索引)。`id >= 200` 用于区分世界事件标记点。
+  - `label.content` 显示的是事件对象上的 `mapLabel` 属性值 (从1开始的序号，在 `_refre中生成)。
+  - `iconPath` 使用 `WORLD_ICON_PATH` (橙色图钉)。
+
+- **统一添加 Marker**：
+  - 中国和世界历史事件的 marker 对象准备好后，会合并到一个 `allMarkers` 数组中。
+  - 调用 `mapCtx.addMarkers({ markers: allMarkers, clear: true })` 一次性将所有标记点添加到地图上，并清除旧的标记点。这可以避免多次调用 `addMarkers` 可能导致的性能问题或标记点丢失。
+
+## Marker 点击与交互 (`onMarkerTap`)
+
+- 当用户点击地图上的任一标ap` 函数被触发，参数 `e.markerId` 即为被点击 marker 的 `id`。 如果 `markerId >= 200`，则判定为世界历史事件标记点。会从 `currentWorldHistoryEvents` 中根据 `markerId - 200` 的索引找到对应事件，并调用 `onWorldEventTap` 的逻辑（传递事件的原始 `id`）来显示世界事件的详情浮窗和时间轴指示器。
+  - 如果 `markerId < 200`，则判定为中国历史事件标记点。会从 `this.currentPeriodDisplayableEvents` 中根据 `markerId` (即数组索引) 找到对应事件，设置 `selectedMarkerInfo` 以显示中国事件的详情浮窗，并更新子时间轴指示器。
+- **防止误触**：`onMarkerTap` 会记录点击时间，`onMapTap` (地图空白处点击) 会检查这个时间，以防止因事件冒泡导致在点击标记点时错误地关闭了浮窗。
+
+## Marker 自动偏移 (`adjustOverlappingCoordinates`)
+
+- **函数**：`adjustOverlappingCoordinates` 函数在 [pages/index/index.js](mdc:pages/index/index.js) 文件末尾定义。
+- **目的**：解决多个事件地理坐标完全相同或非常接近时，地图标记点堆叠在一起难以点击和分辨的问题。
+- **逻辑**：
+  - 接收一个事件对象数组作为输入。
+  - 遍历数组，找出地理坐标（`latitude`, `longitude`）在 `COORD_THRESHOLD` (一个很小的阈值，如0.001) 内的事件组。
+  - 对于每个重叠组，第一个事件的坐标保持不变。
+  - 从第二个事件开始，围绕第一个事件的坐标，以 `OFFSET_INCREMENT` 为基础半径，采用多层圆环布局策略（每层最多8个点）计算新的偏移坐标。偏移半径会随层数增加而增大，但有 `MAX_RADIUS` 限制，避免散得太开。
+  - 确保偏移后的新坐标仍在合法的经纬度范围内。
+- **应用**：在 `updateMarkersForPeriod` (内部的 `_continueUpdateMarkers`) 中，分别对筛选和排序后的中国历史事件列表和世界历史事件列表调用此函数，然后再根据调整后的坐标生成 marker 对象。
+
+## Marker 高亮 (中国历史事件)
+
+- **触发**：当用户从中国历史事件面板 (`.chinese-history-panel`) 点击一个事件条目时 (`onChineseEventTap`)。
+- **逻辑**：
+  1. 找到被点击事件在 `currentPeriodDisplayableEvents` 中的索引 (`markerIndex`)。
+  2. 设置 `this.data.highlightedMarkerId` 为该 `markerIndex`。
+  3. 设置 `this.data.skipViewAdjust = true`，防止后续的 `updateMarkersForPeriod` 意外调整地图视野。
+  4. 调用 `updateMarkersForPeriod`。此函数在生成 marker 对象时，会检查 `this.data.highlightedMarkerId`：
+     - 如果当前 marker 的索引与 `highlightedMarkerId` 匹配，其 `width` 和 `height`会设为较大值 (如40x40)，`label.bgColor` 也会使用高亮颜色 (如 `#2196F3E5`)。
+     - 其他 marker 则使用普通尺寸和颜色。
+  5. 地图标记点重新渲染后，调用 `moveToEventLocation` 将地图中心平移到高亮事件的坐标。
+  6. 启动一个2秒的定时器 (`setTimeout`)。
+  7. 定时器结束后：
+     - 将 `this.data.highlightedMarkerId` 设回 `null`。
+     - 保持 `this.data.skipViewAdjust = true`。
+     - 再次调用 `updateMarkersForPeriod`，此时所有 marker 都会恢复普通状态。
+     - 在 `updateMarkersForPeriod` 的回调中，将 `this.data.skipViewAdjust` 设回 `false`，以便后续操作可以正常调整视野。
+- **目的**：临时放大并突出显示用户从面板中选择的事件对应的地图标记点，引导用户视线，然后自动恢复。

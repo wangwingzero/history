@@ -19,7 +19,7 @@
       "outputPath": ""
     },
     "compileWorklet": false,
-    "uglifyFileName": false,
+    "uglifyFileName": true,
     "uploadWithSourceMap": true,
     "packNpmManually": false,
     "minifyWXSS": true,
@@ -36,6 +36,6 @@
     "tabIndent": "auto",
     "tabSize": 2
   },
-  "appid": "wx827c7d5ed31f2d0c",
+  "appid": "wx3f1597c25a0ee738",
   "simulatorPluginLibVersion": {}
 }

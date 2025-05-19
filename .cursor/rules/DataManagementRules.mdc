@@ -1,0 +1,48 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 数据管理与结构
+globs: ["data/*.js", "pages/index/index.js"]
+alwaysApply: true
+---
+
+# 数据管理与结构
+
+## 中国历史数据
+
+- **统一数据源**：所有中国历史事件数据已整合到 [data/china_history.js](mdc:data/china_history.js) 文件中。不再使用分散的 `period_*.js` 文件。
+- **数据结构**：每个事件对象包含以下主要字段：
+  - `id`（**纯数字**，以 `1` 开头的6位数，如 `100000`），作为事件的唯一原始标识。
+  - `title`（标题）
+  - `locationName`、`latitude`、`longitude`（地理位置信息）
+  - `details` 或 `description`（描述详情）
+  - `startYear`、`endYear`（起止年份。点状事件二者相同；对于持续性事件，`endYear` 为实际结束年份）
+- **数据加载与处理**：
+  - 主页面 [pages/index/index.js](mdc:pages/index/index.js) 直接导入 `chinaHistoryData` 来自 `data/china_history.js`。
+  - **时期数据映射 (`dataPeriodMap`)**：在 `pages/index/index.js` 中，`dataPeriodMap` 的构建逻辑已更新。它不再依赖于事件对象中的 `period` 字段，而是根据 `comprehensiveTimePeriods` 中定义的时期名称，结合 `dynastyStartYearsMap` 计算出每个时期的起止年份范围，然后从 `allChinaHistoryData` (即导入的 `chinaHistoryData`) 中筛选出在该年份范围内的事件，从而填充 `dataPeriodMap`。
+  - **唯一ID (`prefixedId`) 生成**：虽然原始 `id` 是唯一的数字，但在 `pages/index/index.js` 加载数据时，仍然会根据事件所属的综合时期（如"夏"、"商"）为其生成一个带前缀的 `prefixedId`（例如 `xia-100100`）。这个 `prefixedId` 主要用于内部逻辑和组件的 `key`，而地图标记点 `marker` 的 `id` 则通常使用基于其在当前时期事件列表中顺序的数字索引 (0, 1, 2...)。
+
+## 世界历史数据
+
+- **统一数据源**：所有世界历史事件数据已整合到 [data/world_history.js](mdc:data/world_history.js) 文件中。
+- **数据结构**：每个事件对象包含以下主要字段：
+  - `id`（**纯数字**，以 `2` 开头的6位数，通常以100递增，如 `200000`, `200100`），作为事件的唯一原始标识。
+  - `title`（标题）
+  - `startYear`、`endYear`（起止年份）
+  - `description`（描述详情）
+  - `locationName`、`latitude`、`longitude`（可选的地理位置信息，用于地图标记）
+  - `mapLabel`（在 `_refreshActiveWorldEvents` 中动态添加，用于地图标记的数字序号）
+- **数据加载与筛选**：
+  - 主页面 [pages/index/index.js](mdc:pages/index/index.js) 导入 `worldHistoryData` 来自 `data/world_history.js` (赋值给 `allRealWorldHistoryData`)。
+  - 通过 `_refreshActiveWorldEvents` 函数（在 `onPeriodTap` 和 `onToggleWorldHistoryPanel` 中调用）根据当前选中的中国历史时期的起止年份，动态筛选出时间范围上重叠的世界历史事件。
+  - 筛选后的事件被添加 `mapLabel` 序号，存入 `currentWorldHistoryEvents`，用于世界史面板展示和地图标记点生成。
+
+## 王朝疆域数据
+
+- **数据结构**：各时期疆域 GeoJSON 数据（或等效JS对象）存放于 [data/borders/](mdc:data/borders) 子目录下，文件如 `ming.geojson.js`。
+- **加载与显示**：
+  - [pages/index/index.js](mdc:pages/index/index.js) 中的 `borderData` 对象映射时期键名到对应的疆域数据模块。
+  - `loadAndDisplayDynastyBorders` 方法负责根据当前选定时期，调用 `fetchAndParseDynastyBorder` 获取对应的边界数据，然后通过 `parseGeoJsonToPolygons` 将其转换为小程序 `map` 组件 `polygons` 属性所需的格式，最终存储在 `data` 的 `dynastyPolygons` 数组中，并绑定到地图上进行渲染。

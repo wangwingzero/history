@@ -1,7 +1,7 @@
 // data/index.js
 // 统一导出所有时期数据
 
-const { ancientData } = require('./period_ancient.js');
+// const { ancientData } = require('./period_ancient.js'); // Removed
 const { prehistoricData } = require('./period_prehistoric.js');
 const { civilizationOriginData } = require('./period_civilization_origin.js');
 const { xiaData } = require('./period_xia.js');
@@ -17,7 +17,6 @@ const { jinData } = require('./period_jin.js');
 const { northSouthData } = require('./period_north_south.js');
 const { suiData } = require('./period_sui.js');
 const { tangData } = require('./period_tang.js');
-const { fiveDynastiesData } = require('./period_five_dynasties.js');
 const { songData } = require('./period_song.js');
 const { yuanData } = require('./period_yuan.js');
 const { mingData } = require('./period_ming.js');
@@ -31,14 +30,14 @@ const { resistanceWarData } = require('./period_resistance_war.js');
 const { liberationWarData } = require('./period_liberation_war.js');
 const { earlyPrcData } = require('./period_early_prc.js');
 const { socConstrData } = require('./period_soc_constr.js');
-const { culturalRevolutionData } = require('./period_cultural_revolution.js');
+// const { specialPeriodData } = require('./period_cultural_revolution.js'); // 删除
 const { reformOpeningData } = require('./period_reform_opening.js');
 const { socMarketData } = require('./period_soc_market.js');
 const { newEraData } = require('./period_new_era.js');
 // --- 结束新增 ---
 
 module.exports = {
-  ancientData,
+  // ancientData, // Removed
   prehistoricData,
   civilizationOriginData,
   xiaData,
@@ -54,7 +53,6 @@ module.exports = {
   northSouthData,
   suiData,
   tangData,
-  fiveDynastiesData,
   songData,
   yuanData,
   mingData,
@@ -68,7 +66,7 @@ module.exports = {
   liberationWarData,
   earlyPrcData,
   socConstrData,
-  culturalRevolutionData,
+  // specialPeriodData, // 删除
   reformOpeningData,
   socMarketData,
   newEraData
